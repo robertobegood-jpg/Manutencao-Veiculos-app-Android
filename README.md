@@ -15,6 +15,17 @@
   <a href="https://github.com/robertobegood-jpg/Manutencao-Veiculos-app-Android/issues"><b>💬 Sugestões e problemas</b></a>
 </p>
 
+<p align="center">
+  <img src="docs/prints/painel.png" width="200" alt="Painel com o hodômetro e as próximas trocas">
+  <img src="docs/prints/gastos.png" width="200" alt="Gastos por período, custo por km e gráfico por mês">
+  <img src="docs/prints/servicos.png" width="200" alt="Itens de manutenção com a situação de cada um">
+</p>
+<p align="center">
+  <img src="docs/prints/compras.png" width="200" alt="Lista de compras com modelo, referência e preço">
+  <img src="docs/prints/posto.png" width="200" alt="Consumo e abastecimentos">
+  <img src="docs/prints/mais.png" width="200" alt="Ajustes, relatórios, backup e alertas">
+</p>
+
 ---
 
 ## Funções
