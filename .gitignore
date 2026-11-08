@@ -1,0 +1,17 @@
+*.aab
+*.apk
+*.iml
+.DS_Store
+.gradle/
+.idea/
+/build/
+app/build/
+build/
+captures/
+local.properties
+
+# Assinatura do app: NUNCA publicar
+app/assinatura/
+keystore.properties
+*.jks
+*.keystore

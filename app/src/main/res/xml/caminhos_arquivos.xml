@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Pastas que o app pode entregar a outros apps (câmera e compartilhar). -->
+<paths>
+    <files-path name="anexos" path="anexos/" />
+    <cache-path name="exportacoes" path="exportacoes/" />
+</paths>
