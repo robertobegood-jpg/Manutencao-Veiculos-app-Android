@@ -42,7 +42,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.roberto.manutencao.data.FatiaGasto
-import com.roberto.manutencao.data.GastoMes
+import com.roberto.manutencao.data.BarraGasto
 import com.roberto.manutencao.data.PontoConsumo
 import com.roberto.manutencao.ui.formatarConsumo
 import com.roberto.manutencao.ui.formatarDinheiro
@@ -55,8 +55,6 @@ import kotlin.math.log10
 import kotlin.math.pow
 
 private val PT_BR = Locale("pt", "BR")
-private val FORMATO_MES = DateTimeFormatter.ofPattern("MMM", PT_BR)
-private val FORMATO_MES_ANO = DateTimeFormatter.ofPattern("MMMM yyyy", PT_BR)
 private val FORMATO_DIA = DateTimeFormatter.ofPattern("dd/MM", PT_BR)
 
 /** Entrada das réguas do sistema: cúbico ease-out, 0,9 s. */
@@ -140,37 +138,41 @@ fun Legenda(itens: List<Pair<String, Color>>, modifier: Modifier = Modifier) {
     }
 }
 
-/* ───────────── Barras mensais ───────────── */
+/* ───────────── Barras por período ───────────── */
 
 /**
- * Barras empilhadas por mês: manutenção, combustível e outras despesas.
- * Tocar numa barra mostra o detalhe daquele mês no topo.
+ * Barras empilhadas: manutenção, combustível e outras despesas.
+ * Cada barra é um mês, trimestre ou ano (até 12 barras). Os rótulos são
+ * espaçados conforme a largura disponível, e o ano aparece numa linha
+ * própria na virada, para os meses nunca se embolarem.
+ * Tocar numa barra mostra o detalhe dela no topo.
  */
 @Composable
-fun GraficoGastosMensais(meses: List<GastoMes>, modifier: Modifier = Modifier) {
-    if (meses.isEmpty()) return
+fun GraficoGastos(barras: List<BarraGasto>, modifier: Modifier = Modifier) {
+    if (barras.isEmpty()) return
     val c = Oficina.cores
     val t = Oficina.tipos
     val medidor = rememberTextMeasurer()
     val cores = listOf(c.hues[0], c.hues[2], c.hues[3])
 
-    var selecionado by remember(meses.size) { mutableIntStateOf(meses.lastIndex) }
-    val progresso = remember(meses) { Animatable(0f) }
-    LaunchedEffect(meses) { progresso.animateTo(1f, tween(900, easing = EASING_REVELAR)) }
+    var selecionado by remember(barras.size, barras.firstOrNull()?.titulo) { mutableIntStateOf(barras.lastIndex) }
+    val progresso = remember(barras) { Animatable(0f) }
+    LaunchedEffect(barras) { progresso.animateTo(1f, tween(900, easing = EASING_REVELAR)) }
 
-    val teto = tetoRedondo(meses.maxOf { it.total })
+    val teto = tetoRedondo(barras.maxOf { it.total })
     val estiloEixo = t.hud.copy(color = c.faint)
-    val estiloMes = t.hud.copy(color = c.muted)
-    val estiloMesAtivo = t.hud.copy(color = c.ink)
+    val estiloRotulo = t.hud.copy(color = c.muted)
+    val estiloAtivo = t.hud.copy(color = c.ink)
+    val estiloAno = t.hud.copy(color = c.faint)
 
     Column(modifier.fillMaxWidth()) {
-        val mes = meses[selecionado.coerceIn(0, meses.lastIndex)]
+        val atual = barras[selecionado.coerceIn(0, barras.lastIndex)]
         Row(verticalAlignment = Alignment.Bottom) {
-            Hud(mes.mes.format(FORMATO_MES_ANO), Modifier.weight(1f))
-            Text(formatarDinheiro(mes.total), style = t.heading, color = c.inkStrong)
+            Hud(atual.titulo, Modifier.weight(1f))
+            Text(formatarDinheiro(atual.total), style = t.heading, color = c.inkStrong)
         }
         Text(
-            "Manutenção ${formatarDinheiro(mes.manutencao)} · Combustível ${formatarDinheiro(mes.combustivel)} · Outras ${formatarDinheiro(mes.despesas)}",
+            "Manutenção ${formatarDinheiro(atual.manutencao)} · Combustível ${formatarDinheiro(atual.combustivel)} · Outras ${formatarDinheiro(atual.despesas)}",
             style = t.bodySm,
             color = c.muted
         )
@@ -179,17 +181,18 @@ fun GraficoGastosMensais(meses: List<GastoMes>, modifier: Modifier = Modifier) {
         Canvas(
             Modifier
                 .fillMaxWidth()
-                .height(180.dp)
-                .pointerInput(meses.size) {
+                .height(200.dp)
+                .pointerInput(barras.size) {
                     detectTapGestures { posicao ->
-                        val faixa = size.width.toFloat() / meses.size
-                        selecionado = (posicao.x / faixa).toInt().coerceIn(0, meses.lastIndex)
+                        val faixa = size.width.toFloat() / barras.size
+                        selecionado = (posicao.x / faixa).toInt().coerceIn(0, barras.lastIndex)
                     }
                 }
         ) {
-            val alturaRotulo = 20.dp.toPx()
-            val alturaUtil = size.height - alturaRotulo
+            val alturaRotulos = 38.dp.toPx()
+            val alturaUtil = size.height - alturaRotulos
             val fio = 1.dp.toPx()
+            val folga = 8.dp.toPx()
 
             // Grade: 4 divisões, valor no canto esquerdo de cada linha.
             for (i in 0..4) {
@@ -201,34 +204,50 @@ fun GraficoGastosMensais(meses: List<GastoMes>, modifier: Modifier = Modifier) {
                 }
             }
 
-            val faixa = size.width / meses.size
-            val larguraBarra = faixa * 0.56f
-            meses.forEachIndexed { i, m ->
-                val x = faixa * i + (faixa - larguraBarra) / 2
+            val faixa = size.width / barras.size
+            val larguraBarra = (faixa * 0.56f).coerceAtMost(28.dp.toPx())
+            fun centro(i: Int) = faixa * i + faixa / 2
+
+            // De quantas em quantas barras cabe um rótulo, contando a partir da mais recente.
+            val maiorRotulo = barras.maxOf { medidor.measure(it.rotulo, estiloRotulo).size.width }
+            val passo = listOf(1, 2, 3, 4, 6).firstOrNull { faixa * it >= maiorRotulo + folga } ?: 12
+
+            barras.forEachIndexed { i, b ->
+                val x = centro(i) - larguraBarra / 2
                 val alfa = if (i == selecionado) 1f else 0.45f
                 var base = alturaUtil
-                listOf(m.manutencao, m.combustivel, m.despesas).forEachIndexed { s, valor ->
+                listOf(b.manutencao, b.combustivel, b.despesas).forEachIndexed { serie, valor ->
                     if (valor > 0) {
                         val h = alturaUtil * (valor.toFloat() / teto) * progresso.value
                         drawRect(
-                            color = cores[s].copy(alpha = alfa),
+                            color = cores[serie].copy(alpha = alfa),
                             topLeft = Offset(x, base - h),
                             size = Size(larguraBarra, (h - fio).coerceAtLeast(0f))
                         )
                         base -= h
                     }
                 }
-                val rotulo = medidor.measure(
-                    m.mes.format(FORMATO_MES).removeSuffix(".").uppercase(PT_BR),
-                    if (i == selecionado) estiloMesAtivo else estiloMes
-                )
-                // Com muitas barras, mostra o rótulo de meses alternados.
-                if (meses.size <= 12 || i % 2 == (meses.lastIndex % 2)) {
-                    drawText(
-                        rotulo,
-                        topLeft = Offset(x + larguraBarra / 2 - rotulo.size.width / 2, alturaUtil + 6.dp.toPx())
-                    )
+                // Rótulo só nas barras espaçadas; o título da selecionada já aparece no topo.
+                if ((barras.lastIndex - i) % passo == 0) {
+                    val r = medidor.measure(b.rotulo, if (i == selecionado) estiloAtivo else estiloRotulo)
+                    val esquerda = (centro(i) - r.size.width / 2).coerceIn(0f, size.width - r.size.width)
+                    drawText(r, topLeft = Offset(esquerda, alturaUtil + 6.dp.toPx()))
                 }
+            }
+
+            // Linha do ano: um traço e o ano em cada virada. Percorre da direita para a
+            // esquerda, para que as viradas reais tenham prioridade sobre o ano da 1ª barra.
+            var inicioProximo = Float.POSITIVE_INFINITY
+            val yAno = alturaUtil + 22.dp.toPx()
+            for (i in barras.lastIndex downTo 0) {
+                val ano = barras[i].ano ?: continue
+                val r = medidor.measure(ano, estiloAno)
+                val esquerda = if (i == 0) 0f else centro(i) - faixa / 2
+                val recuo = if (i == 0) 0f else 4.dp.toPx()
+                if (esquerda + recuo + r.size.width + folga > inicioProximo) continue
+                if (i > 0) drawLine(c.lineStrong, Offset(esquerda, alturaUtil), Offset(esquerda, yAno + r.size.height), fio)
+                drawText(r, topLeft = Offset(esquerda + recuo, yAno))
+                inicioProximo = esquerda
             }
         }
         Spacer(Modifier.height(8.dp))

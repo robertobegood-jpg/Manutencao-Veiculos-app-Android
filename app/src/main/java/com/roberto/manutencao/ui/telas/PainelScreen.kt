@@ -30,7 +30,7 @@ import com.roberto.manutencao.data.RegistroComItens
 import com.roberto.manutencao.ui.componentes.GradeIndicadores
 import com.roberto.manutencao.ui.componentes.GraficoCategorias
 import com.roberto.manutencao.ui.componentes.GraficoConsumo
-import com.roberto.manutencao.ui.componentes.GraficoGastosMensais
+import com.roberto.manutencao.ui.componentes.GraficoGastos
 import com.roberto.manutencao.ui.componentes.Segmentado
 import com.roberto.manutencao.ui.formatarKm
 import java.time.LocalDate
@@ -209,7 +209,7 @@ private fun SecaoGastos(
     val resumo = remember(periodo, registros, abastecimentos, despesas, leituras, veiculo.kmAtual) {
         Estatisticas.resumir(periodo, LocalDate.now(), registros, abastecimentos, despesas, leituras, veiculo.kmAtual)
     }
-    val semDados = resumo.meses.all { it.total == 0L } && resumo.gastoTotal == 0L
+    val semDados = resumo.barras.all { it.total == 0L } && resumo.gastoTotal == 0L
 
     Column(Modifier.padding(horizontal = 16.dp)) {
         Eyebrow("03", "Gastos")
@@ -223,7 +223,7 @@ private fun SecaoGastos(
         Spacer(Modifier.height(12.dp))
         GradeIndicadores(
             listOf(
-                (if (periodo == Periodo.MES) "Gasto no mês" else "Gasto no período") to
+                (if (periodo == Periodo.MES) "Gasto no mês" else "Total gasto") to
                     (if (resumo.gastoTotal > 0) formatarDinheiro(resumo.gastoTotal) else "—"),
                 "Custo por km" to (resumo.custoPorKm?.let { "${formatarDinheiro(Math.round(it))}/km" } ?: "—"),
                 "Km rodados" to (resumo.kmRodados?.formatarKm() ?: "—"),
@@ -244,9 +244,9 @@ private fun SecaoGastos(
             )
         } else {
             Spacer(Modifier.height(24.dp))
-            Hud("Por mês")
+            Hud(resumo.escala.rotulo)
             Spacer(Modifier.height(8.dp))
-            GraficoGastosMensais(resumo.meses)
+            GraficoGastos(resumo.barras)
 
             if (resumo.fatias.isNotEmpty()) {
                 Spacer(Modifier.height(24.dp))

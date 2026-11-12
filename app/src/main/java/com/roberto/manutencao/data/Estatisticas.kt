@@ -4,7 +4,9 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
+import java.util.Locale
 
 enum class Periodo(val rotulo: String, val meses: Long?) {
     MES("Mês", 1),
@@ -13,9 +15,22 @@ enum class Periodo(val rotulo: String, val meses: Long?) {
     TUDO("Tudo", null)
 }
 
-/** Gastos de um mês, em centavos, separados nas três séries do gráfico. */
-data class GastoMes(
-    val mes: YearMonth,
+/** Tamanho de cada barra do gráfico de gastos. */
+enum class Escala(val rotulo: String) {
+    MES("Por mês"),
+    TRIMESTRE("Por trimestre"),
+    ANO("Por ano")
+}
+
+/**
+ * Uma barra do gráfico: gastos de um mês, trimestre ou ano, em centavos.
+ * [rotulo] vai embaixo da barra ("NOV", "3T", "2025"); [ano] marca a virada de ano
+ * na linha de baixo; [titulo] aparece no topo quando a barra é tocada.
+ */
+data class BarraGasto(
+    val rotulo: String,
+    val ano: String?,
+    val titulo: String,
     val manutencao: Long,
     val combustivel: Long,
     val despesas: Long
@@ -39,7 +54,8 @@ data class ResumoPainel(
     val custoPorKm: Double?,
     val consumoMedio: Double?,
     val gastoMedioMensal: Long?,
-    val meses: List<GastoMes>,
+    val escala: Escala,
+    val barras: List<BarraGasto>,
     val fatias: List<FatiaGasto>,
     val consumo: List<PontoConsumo>
 )
@@ -98,7 +114,8 @@ object Estatisticas {
             a.consumoKmL?.let { PontoConsumo(Datas.paraLocalDate(a.abastecimento.data), it) }
         }.sortedBy { it.data }
 
-        // Janela de meses do gráfico de barras (mínimo 6, máximo 24).
+        // Barras do gráfico. Períodos longos são agrupados em trimestres ou anos,
+        // para nunca passar de 12 barras e os rótulos não se embolarem.
         val primeiraData = listOfNotNull(
             registros.minOfOrNull { it.registro.data },
             abastecimentos.minOfOrNull { it.abastecimento.data },
@@ -108,22 +125,63 @@ object Estatisticas {
         val mesesDesdeInicio = primeiraData?.let {
             ChronoUnit.MONTHS.between(YearMonth.from(it), ultimoMes).toInt() + 1
         } ?: 1
-        val quantidadeBarras = when (periodo) {
-            Periodo.MES, Periodo.SEMESTRE -> 6
-            Periodo.ANO -> 12
-            Periodo.TUDO -> mesesDesdeInicio.coerceIn(6, 24)
+        val escala = when {
+            periodo != Periodo.TUDO || mesesDesdeInicio <= 12 -> Escala.MES
+            mesesDesdeInicio <= 36 -> Escala.TRIMESTRE
+            else -> Escala.ANO
         }
-        val meses = (quantidadeBarras - 1 downTo 0).map { atras ->
-            val mes = ultimoMes.minusMonths(atras.toLong())
-            fun doMes(millis: Long) = YearMonth.from(Datas.paraLocalDate(millis)) == mes
-            GastoMes(
-                mes = mes,
-                manutencao = registros.filter { doMes(it.registro.data) }
-                    .sumOf { it.registro.valorPecasCentavos + it.registro.valorMaoDeObraCentavos },
-                combustivel = abastecimentos.filter { doMes(it.abastecimento.data) }
-                    .sumOf { it.abastecimento.totalCentavos },
-                despesas = despesas.filter { doMes(it.data) }.sumOf { it.valorCentavos }
-            )
+        val barras = when (escala) {
+            Escala.MES -> {
+                val quantidade = when (periodo) {
+                    Periodo.MES, Periodo.SEMESTRE -> 6
+                    Periodo.ANO -> 12
+                    Periodo.TUDO -> mesesDesdeInicio.coerceIn(6, 12)
+                }
+                (quantidade - 1 downTo 0).mapIndexed { i, atras ->
+                    val mes = ultimoMes.minusMonths(atras.toLong())
+                    barra(
+                        rotulo = mes.format(MES_CURTO).removeSuffix(".").uppercase(PT_BR),
+                        ano = if (i == 0 || mes.monthValue == 1) mes.year.toString() else null,
+                        titulo = mes.format(MES_ANO),
+                        inicio = mes.atDay(1),
+                        fim = mes.atEndOfMonth(),
+                        registros, abastecimentos, despesas
+                    )
+                }
+            }
+            Escala.TRIMESTRE -> {
+                fun trimestreDe(ym: YearMonth) = YearMonth.of(ym.year, (ym.monthValue - 1) / 3 * 3 + 1)
+                val ultimo = trimestreDe(ultimoMes)
+                val primeiro = trimestreDe(YearMonth.from(primeiraData ?: hoje))
+                val quantidade = (ChronoUnit.MONTHS.between(primeiro, ultimo).toInt() / 3 + 1).coerceIn(4, 12)
+                (quantidade - 1 downTo 0).mapIndexed { i, atras ->
+                    val ini = ultimo.minusMonths(atras * 3L)
+                    val numero = (ini.monthValue - 1) / 3 + 1
+                    barra(
+                        rotulo = "${numero}T",
+                        ano = if (i == 0 || numero == 1) ini.year.toString() else null,
+                        titulo = "${numero}º trimestre ${ini.year}",
+                        inicio = ini.atDay(1),
+                        fim = ini.plusMonths(2).atEndOfMonth(),
+                        registros, abastecimentos, despesas
+                    )
+                }
+            }
+            Escala.ANO -> {
+                val primeiroAno = (primeiraData ?: hoje).year
+                val quantidade = (hoje.year - primeiroAno + 1).coerceIn(2, 12)
+                (quantidade - 1 downTo 0).map { atras ->
+                    val ano = hoje.year - atras
+                    barra(
+                        rotulo = ano.toString(),
+                        ano = null,
+                        titulo = ano.toString(),
+                        inicio = LocalDate.of(ano, 1, 1),
+                        fim = LocalDate.of(ano, 12, 31),
+                        registros, abastecimentos, despesas
+                    )
+                }
+            }
         }
 
         val mesesNoPeriodo = periodo.meses?.toInt() ?: mesesDesdeInicio
@@ -136,9 +194,38 @@ object Estatisticas {
             custoPorKm = custoPorKm,
             consumoMedio = CalculoConsumo.media(abs),
             gastoMedioMensal = mediaMensal,
-            meses = meses,
+            escala = escala,
+            barras = barras,
             fatias = fatias,
             consumo = consumo
+        )
+    }
+
+    private val PT_BR = Locale("pt", "BR")
+    private val MES_CURTO = DateTimeFormatter.ofPattern("MMM", PT_BR)
+    private val MES_ANO = DateTimeFormatter.ofPattern("MMMM yyyy", PT_BR)
+
+    /** Soma as três séries entre [inicio] e [fim], inclusive. */
+    private fun barra(
+        rotulo: String,
+        ano: String?,
+        titulo: String,
+        inicio: LocalDate,
+        fim: LocalDate,
+        registros: List<RegistroComItens>,
+        abastecimentos: List<AbastecimentoComConsumo>,
+        despesas: List<Despesa>
+    ): BarraGasto {
+        fun dentro(millis: Long) = Datas.paraLocalDate(millis).let { !it.isBefore(inicio) && !it.isAfter(fim) }
+        return BarraGasto(
+            rotulo = rotulo,
+            ano = ano,
+            titulo = titulo,
+            manutencao = registros.filter { dentro(it.registro.data) }
+                .sumOf { it.registro.valorPecasCentavos + it.registro.valorMaoDeObraCentavos },
+            combustivel = abastecimentos.filter { dentro(it.abastecimento.data) }
+                .sumOf { it.abastecimento.totalCentavos },
+            despesas = despesas.filter { dentro(it.data) }.sumOf { it.valorCentavos }
         )
     }
 
