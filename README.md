@@ -137,6 +137,8 @@ app/src/main/java/com/roberto/manutencao/
 
 **Compilar:** abra a pasta no Android Studio e use *Build › Build APK(s)*, ou rode `./gradlew assembleDebug`. Sem a chave oficial, o APK sai assinado com a chave de debug padrão. Ele funciona normalmente, mas não atualiza por cima da versão oficial.
 
+**Revisão antes de cada versão:** os testes em `app/src/test` conferem os cálculos (vencimentos, consumo, gráficos e Pix) e desenham as telas com dados extremos (nomes longos, valores altos, históricos de anos, fonte grande) usando o [Paparazzi](https://github.com/cashapp/paparazzi). Para rodar: `./gradlew recordPaparazziDebug`. Um push no branch `revisao` roda tudo no GitHub Actions e publica os prints no branch `revisao-telas`.
+
 **Publicar uma versão** (mantenedor): suba `versionCode` e `versionName` em `app/build.gradle.kts`, escreva as notas em `notas/vX.Y.md`, faça o commit e crie uma tag `vX.Y`. O GitHub Actions compila, assina e publica a Release com o APK e as notas.
 
 Sugestões e correções são bem-vindas por [issues](https://github.com/robertobegood-jpg/Manutencao-Veiculos-app-Android/issues) e pull requests.
