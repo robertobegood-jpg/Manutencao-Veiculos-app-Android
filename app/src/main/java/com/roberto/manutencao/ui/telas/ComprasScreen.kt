@@ -280,7 +280,7 @@ private fun LinhaCompra(
             )
             // Referência em linha própria e inteira: é o que identifica a peça na loja.
             if (compra.referencia.isNotBlank()) {
-                Hud("Ref. ${compra.referencia}", cor = if (compra.comprado) c.faint else c.accentInk, maxLinhas = 2)
+                Hud("Ref.\u00A0${compra.referencia}", cor = if (compra.comprado) c.faint else c.accentInk, maxLinhas = 3)
             }
             if (compra.modelo.isNotBlank()) {
                 Text(compra.modelo, style = t.bodySm, color = c.muted, maxLines = 2, overflow = TextOverflow.Ellipsis)

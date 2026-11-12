@@ -88,12 +88,14 @@ private fun dinheiroCompacto(centavos: Long): String {
 @Composable
 fun GradeIndicadores(itens: List<Pair<String, String>>, modifier: Modifier = Modifier) {
     val c = Oficina.cores
+    // Com a fonte do celular aumentada, uma coluna só, para os valores caberem inteiros.
+    val colunas = if (LocalDensity.current.fontScale > 1.15f) 1 else 2
     Column(
         modifier
             .fillMaxWidth()
             .border(1.dp, c.line)
     ) {
-        itens.chunked(2).forEachIndexed { linha, par ->
+        itens.chunked(colunas).forEachIndexed { linha, par ->
             if (linha > 0) Linha()
             Row(Modifier.height(IntrinsicSize.Min)) {
                 par.forEachIndexed { i, (rotulo, valor) ->
@@ -119,7 +121,7 @@ fun GradeIndicadores(itens: List<Pair<String, String>>, modifier: Modifier = Mod
                         )
                     }
                 }
-                if (par.size == 1) Spacer(Modifier.weight(1f))
+                if (par.size < colunas) Spacer(Modifier.weight(1f))
             }
         }
     }
