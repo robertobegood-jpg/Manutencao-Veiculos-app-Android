@@ -66,10 +66,11 @@ fun BarraSuperior(
         ) {
             SeletorVeiculo(veiculos, selecionado, onSelecionar, onGerenciar, Modifier.weight(1f))
             Spacer(Modifier.width(12.dp))
-            Text(
-                "Manutenção",
-                style = Oficina.tipos.heading.copy(fontSize = 14.sp, lineHeight = 16.sp, letterSpacing = (-0.01).em),
-                color = c.ink
+            // Marca do app: Archivo expandido com a palavra de emoção em serif itálico.
+            TituloDisplay(
+                "Em *dia*",
+                estilo = Oficina.tipos.heading.copy(fontSize = 18.sp, lineHeight = 20.sp, letterSpacing = (-0.01).em),
+                cor = c.ink
             )
         }
         Linha()

@@ -34,7 +34,7 @@ object Backup {
 
     data class Resumo(val veiculos: Int, val registros: Int, val fotos: Int)
 
-    fun nomeSugerido(): String = "manutencao-backup-${java.time.LocalDate.now()}.zip"
+    fun nomeSugerido(): String = "emdia-backup-${java.time.LocalDate.now()}.zip"
 
     suspend fun exportar(context: Context, db: AppDatabase, destino: Uri): Resumo {
         val dao = db.backupDao()

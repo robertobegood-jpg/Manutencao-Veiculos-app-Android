@@ -48,7 +48,7 @@ jobs:
             ./gradlew assembleDebug --no-daemon
           else
             ./gradlew assembleRelease --no-daemon
-            NOME="ManutencaoVeiculos-${GITHUB_REF_NAME//\//-}.apk"
+            NOME="EmDia-${GITHUB_REF_NAME//\//-}.apk"
             cp app/build/outputs/apk/release/app-release.apk "$NOME"
             echo "APK=$NOME" >> "$GITHUB_ENV"
           fi
@@ -61,7 +61,7 @@ jobs:
         if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
-          name: ManutencaoVeiculos-apk
+          name: EmDia-apk
           path: ${{ env.APK }}
 
       - name: Procurar notas da versão
@@ -75,7 +75,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/v') && env.NOTAS != ''
         uses: softprops/action-gh-release@v2
         with:
-          name: Manutenção ${{ github.ref_name }}
+          name: Em Dia ${{ github.ref_name }}
           files: ${{ env.APK }}
           body_path: ${{ env.NOTAS }}
 
@@ -83,6 +83,6 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/v') && env.NOTAS == ''
         uses: softprops/action-gh-release@v2
         with:
-          name: Manutenção ${{ github.ref_name }}
+          name: Em Dia ${{ github.ref_name }}
           files: ${{ env.APK }}
           generate_release_notes: true

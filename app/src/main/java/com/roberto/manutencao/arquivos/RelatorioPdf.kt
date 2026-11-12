@@ -236,7 +236,7 @@ object RelatorioPdf {
         val v = dados.veiculo
         val hoje = LocalDate.now()
         val doc = PdfDocument()
-        val e = Escritor(doc, fontes, "Manutenção · ${v.apelido} · emitido em ${Datas.formatar(hoje)}")
+        val e = Escritor(doc, fontes, "Em Dia · ${v.apelido} · emitido em ${Datas.formatar(hoje)}")
         e.novaPagina()
 
         // Cabeçalho.

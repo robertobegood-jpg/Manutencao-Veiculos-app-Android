@@ -1,11 +1,11 @@
 <p align="center">
-  <img src="docs/icone.png" width="112" alt="Ícone do app Manutenção">
+  <img src="docs/icone.png" width="112" alt="Ícone do app Em Dia">
 </p>
 
-<h1 align="center">Manutenção de Veículos</h1>
+<h1 align="center">Em Dia</h1>
 
 <p align="center">
-  App Android gratuito e de código aberto para cuidar do <b>carro e da moto</b>:<br>
+  Manutenção do <b>carro e da moto</b> sempre em dia. App Android gratuito e de código aberto:<br>
   alertas de troca por km e por tempo, lista de compras de peças, consumo, gastos com gráficos e relatório em PDF.
 </p>
 
@@ -85,7 +85,7 @@ O seletor no topo troca o veículo, e todas as telas passam a mostrar os dados d
 1. Cadastre o veículo com o km que aparece no painel.
 2. Em **Serviços**, abra cada item importante e informe a última troca feita antes de usar o app. Sem isso, o app não sabe quando vence.
 3. Ajuste os intervalos conforme o manual do seu veículo. Os de fábrica são só um ponto de partida.
-4. Se os alertas não chegarem: *Configurações do Android › Apps › Manutenção › Bateria → Sem restrições*. Nos Xiaomi, ative também a *Inicialização automática*.
+4. Se os alertas não chegarem: *Configurações do Android › Apps › Em Dia › Bateria → Sem restrições*. Nos Xiaomi, ative também a *Inicialização automática*.
 
 ---
 

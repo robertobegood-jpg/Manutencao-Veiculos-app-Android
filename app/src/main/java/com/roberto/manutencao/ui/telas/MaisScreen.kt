@@ -122,7 +122,7 @@ fun MaisScreen(
             runCatching { contexto.packageManager.getPackageInfo(contexto.packageName, 0).versionName }.getOrNull()
         }
         Hud(
-            "Manutenção${versao?.let { " · versão $it" }.orEmpty()} · código aberto no GitHub",
+            "Em Dia${versao?.let { " · versão $it" }.orEmpty()} · código aberto no GitHub",
             Modifier.padding(16.dp),
             cor = c.faint
         )
