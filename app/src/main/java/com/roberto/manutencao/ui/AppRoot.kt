@@ -93,7 +93,7 @@ object Rotas {
         "compra_form?veiculo=$veiculo&id=$id&item=$item"
 }
 
-private val abas = listOf(
+internal val abas = listOf(
     AbaNav(Rotas.PAINEL, "Painel", Icons.Outlined.Dashboard),
     AbaNav(Rotas.MANUTENCOES, "Serviços", Icons.Outlined.Build),
     AbaNav(Rotas.COMPRAS, "Compras", Icons.Outlined.ShoppingCart),

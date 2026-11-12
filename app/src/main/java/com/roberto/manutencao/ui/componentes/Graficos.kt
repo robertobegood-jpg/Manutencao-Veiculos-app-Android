@@ -36,6 +36,7 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextOverflow
@@ -156,8 +157,10 @@ fun GraficoGastos(barras: List<BarraGasto>, modifier: Modifier = Modifier) {
     val cores = listOf(c.hues[0], c.hues[2], c.hues[3])
 
     var selecionado by remember(barras.size, barras.firstOrNull()?.titulo) { mutableIntStateOf(barras.lastIndex) }
-    val progresso = remember(barras) { Animatable(0f) }
-    LaunchedEffect(barras) { progresso.animateTo(1f, tween(900, easing = EASING_REVELAR)) }
+    // Em prévias e prints automáticos (modo inspeção) o gráfico já aparece completo.
+    val inspecao = LocalInspectionMode.current
+    val progresso = remember(barras) { Animatable(if (inspecao) 1f else 0f) }
+    LaunchedEffect(barras) { if (!inspecao) progresso.animateTo(1f, tween(900, easing = EASING_REVELAR)) }
 
     val teto = tetoRedondo(barras.maxOf { it.total })
     val estiloEixo = t.hud.copy(color = c.faint)
@@ -312,8 +315,9 @@ fun GraficoConsumo(pontos: List<PontoConsumo>, media: Double?, modifier: Modifie
     val c = Oficina.cores
     val t = Oficina.tipos
     val medidor = rememberTextMeasurer()
-    val progresso = remember(pontos) { Animatable(0f) }
-    LaunchedEffect(pontos) { progresso.animateTo(1f, tween(1100, easing = EASING_REVELAR)) }
+    val inspecao = LocalInspectionMode.current
+    val progresso = remember(pontos) { Animatable(if (inspecao) 1f else 0f) }
+    LaunchedEffect(pontos) { if (!inspecao) progresso.animateTo(1f, tween(1100, easing = EASING_REVELAR)) }
 
     val valores = pontos.map { it.kmL } + listOfNotNull(media)
     val minimo = floor(valores.min() - 1).coerceAtLeast(0.0)

@@ -196,16 +196,17 @@ fun PainelScreen(
 }
 
 @Composable
-private fun SecaoGastos(
+internal fun SecaoGastos(
     veiculo: Veiculo,
     registros: List<RegistroComItens>,
     abastecimentos: List<AbastecimentoComConsumo>,
     despesas: List<Despesa>,
-    leituras: List<LeituraKm>
+    leituras: List<LeituraKm>,
+    periodoInicial: Periodo = Periodo.MES
 ) {
     val c = Oficina.cores
     val t = Oficina.tipos
-    var periodo by rememberSaveable { mutableStateOf(Periodo.MES) }
+    var periodo by rememberSaveable { mutableStateOf(periodoInicial) }
     val resumo = remember(periodo, registros, abastecimentos, despesas, leituras, veiculo.kmAtual) {
         Estatisticas.resumir(periodo, LocalDate.now(), registros, abastecimentos, despesas, leituras, veiculo.kmAtual)
     }

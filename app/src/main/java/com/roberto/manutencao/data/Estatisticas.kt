@@ -125,9 +125,13 @@ object Estatisticas {
         val mesesDesdeInicio = primeiraData?.let {
             ChronoUnit.MONTHS.between(YearMonth.from(it), ultimoMes).toInt() + 1
         } ?: 1
+        fun trimestreDe(ym: YearMonth) = YearMonth.of(ym.year, (ym.monthValue - 1) / 3 * 3 + 1)
+        val trimestresDesdeInicio = primeiraData?.let {
+            ChronoUnit.MONTHS.between(trimestreDe(YearMonth.from(it)), trimestreDe(ultimoMes)).toInt() / 3 + 1
+        } ?: 1
         val escala = when {
             periodo != Periodo.TUDO || mesesDesdeInicio <= 12 -> Escala.MES
-            mesesDesdeInicio <= 36 -> Escala.TRIMESTRE
+            trimestresDesdeInicio <= 12 -> Escala.TRIMESTRE
             else -> Escala.ANO
         }
         val barras = when (escala) {
@@ -150,10 +154,8 @@ object Estatisticas {
                 }
             }
             Escala.TRIMESTRE -> {
-                fun trimestreDe(ym: YearMonth) = YearMonth.of(ym.year, (ym.monthValue - 1) / 3 * 3 + 1)
                 val ultimo = trimestreDe(ultimoMes)
-                val primeiro = trimestreDe(YearMonth.from(primeiraData ?: hoje))
-                val quantidade = (ChronoUnit.MONTHS.between(primeiro, ultimo).toInt() / 3 + 1).coerceIn(4, 12)
+                val quantidade = trimestresDesdeInicio.coerceIn(4, 12)
                 (quantidade - 1 downTo 0).mapIndexed { i, atras ->
                     val ini = ultimo.minusMonths(atras * 3L)
                     val numero = (ini.monthValue - 1) / 3 + 1
