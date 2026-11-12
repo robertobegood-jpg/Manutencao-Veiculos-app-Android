@@ -17,8 +17,8 @@ android {
         applicationId = "com.roberto.manutencao"
         minSdk = 26
         targetSdk = 35
-        versionCode = 10
-        versionName = "1.2"
+        versionCode = 11
+        versionName = "1.3"
     }
 
     // Assinatura oficial do app. A chave NÃO fica no repositório:
