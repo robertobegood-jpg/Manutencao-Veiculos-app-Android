@@ -37,6 +37,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.rememberDatePickerState
@@ -82,14 +83,15 @@ fun Hud(
     texto: String,
     modifier: Modifier = Modifier,
     cor: Color = Oficina.cores.muted,
-    estilo: TextStyle = Oficina.tipos.hud
+    estilo: TextStyle = Oficina.tipos.hud,
+    maxLinhas: Int = 1
 ) {
     Text(
         text = texto.uppercase(PT_BR),
         modifier = modifier,
         color = cor,
         style = estilo,
-        maxLines = 1,
+        maxLines = maxLinhas,
         overflow = TextOverflow.Ellipsis
     )
 }
@@ -607,7 +609,15 @@ fun CampoData(
     }
 
     if (aberto) {
-        val estado = rememberDatePickerState(initialSelectedDateMillis = valor ?: Datas.hoje())
+        // Manutenções, abastecimentos e despesas já aconteceram: datas futuras não são aceitas.
+        val hoje = Datas.hoje()
+        val estado = rememberDatePickerState(
+            initialSelectedDateMillis = (valor ?: hoje).coerceAtMost(hoje),
+            selectableDates = object : SelectableDates {
+                override fun isSelectableDate(utcTimeMillis: Long) = utcTimeMillis <= hoje
+                override fun isSelectableYear(year: Int) = year <= java.time.LocalDate.now().year
+            }
+        )
         val coresCalendario = DatePickerDefaults.colors(containerColor = cores.bgRaised)
         DatePickerDialog(
             onDismissRequest = { aberto = false },

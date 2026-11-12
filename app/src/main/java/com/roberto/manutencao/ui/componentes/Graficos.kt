@@ -8,6 +8,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -37,6 +38,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextOverflow
@@ -106,18 +108,38 @@ fun GradeIndicadores(itens: List<Pair<String, String>>, modifier: Modifier = Mod
                     ) {
                         Hud(rotulo)
                         Spacer(Modifier.height(4.dp))
-                        Text(
+                        TextoQueCabe(
                             valor,
-                            style = Oficina.tipos.heading.copy(fontSize = 20.sp, lineHeight = 26.sp),
-                            color = if (valor == "—") c.faint else c.inkStrong,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
+                            estilo = Oficina.tipos.heading.copy(fontSize = 20.sp, lineHeight = 26.sp),
+                            cor = if (valor == "—") c.faint else c.inkStrong
                         )
                     }
                 }
                 if (par.size == 1) Spacer(Modifier.weight(1f))
             }
         }
+    }
+}
+
+/**
+ * Texto de uma linha que diminui a fonte até caber na largura disponível
+ * (até 60% do tamanho original), em vez de ser cortado com reticências.
+ */
+@Composable
+fun TextoQueCabe(texto: String, estilo: TextStyle, cor: Color, modifier: Modifier = Modifier) {
+    val medidor = rememberTextMeasurer()
+    BoxWithConstraints(modifier) {
+        val disponivel = constraints.maxWidth
+        val largura = remember(texto, estilo) { medidor.measure(texto, estilo, softWrap = false, maxLines = 1).size.width }
+        val escala = if (disponivel in 1 until largura) (disponivel.toFloat() / largura).coerceAtLeast(0.6f) else 1f
+        Text(
+            texto,
+            style = estilo.copy(fontSize = estilo.fontSize * escala, lineHeight = estilo.lineHeight * escala),
+            color = cor,
+            maxLines = 1,
+            softWrap = false,
+            overflow = TextOverflow.Ellipsis
+        )
     }
 }
 

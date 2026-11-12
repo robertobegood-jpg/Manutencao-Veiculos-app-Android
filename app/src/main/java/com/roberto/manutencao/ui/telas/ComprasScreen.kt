@@ -277,7 +277,7 @@ private fun LinhaCompra(
                 textDecoration = if (compra.comprado) TextDecoration.LineThrough else null
             )
             val peca = descreverPeca(compra.modelo, compra.referencia)
-            if (peca.isNotBlank()) Hud(peca, cor = if (compra.comprado) c.faint else c.muted)
+            if (peca.isNotBlank()) Hud(peca, cor = if (compra.comprado) c.faint else c.muted, maxLinhas = 2)
             val detalhe = listOfNotNull(
                 descreverQuantidade(compra) +
                     if (compra.precoUnitarioCentavos > 0) " × ${formatarDinheiro(compra.precoUnitarioCentavos)}" else "",

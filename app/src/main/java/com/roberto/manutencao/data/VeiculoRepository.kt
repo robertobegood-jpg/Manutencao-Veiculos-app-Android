@@ -28,7 +28,13 @@ class VeiculoRepository(private val db: AppDatabase) {
             manutencaoDao.inserirItens(ModelosManutencao.criarItens(id, veiculo.tipo))
             id
         } else {
+            val antes = veiculoDao.buscarPorId(veiculo.id)
             veiculoDao.atualizar(veiculo)
+            // Correção de km pelo cadastro (ex.: digitou 2.010.000 em vez de 201.000).
+            if (antes != null && antes.kmAtual != veiculo.kmAtual) {
+                if (veiculo.kmAtual < antes.kmAtual) leituraDao.apagarAcimaDe(veiculo.id, veiculo.kmAtual)
+                leituraDao.inserir(LeituraKm(veiculoId = veiculo.id, km = veiculo.kmAtual))
+            }
             veiculo.id
         }
     }

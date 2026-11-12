@@ -11,12 +11,10 @@ import androidx.compose.ui.text.font.FontFamily
 class FontesOficina(context: Context) {
     private val assets = context.applicationContext.assets
 
-    private val disponiveis: Set<String> =
-        try {
-            assets.list("fonts")?.toSet() ?: emptySet()
-        } catch (e: Exception) {
-            emptySet()
-        }
+    /** Testa abrindo cada arquivo (listar a pasta não funciona em todos os ambientes). */
+    private val disponiveis: Set<String> = TODAS.filter { nome ->
+        runCatching { assets.open("fonts/$nome").close() }.isSuccess
+    }.toSet()
 
     /** Archivo expandido (wdth 118), peso 620. */
     val display: FontFamily = carregar(

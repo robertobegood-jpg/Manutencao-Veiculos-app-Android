@@ -59,6 +59,10 @@ interface LeituraKmDao {
     @Query("SELECT * FROM leituras_km WHERE veiculoId = :veiculoId ORDER BY data DESC")
     fun observarPorVeiculo(veiculoId: Long): Flow<List<LeituraKm>>
 
+    /** Usado ao corrigir um km digitado errado: tira as leituras acima do valor certo. */
+    @Query("DELETE FROM leituras_km WHERE veiculoId = :veiculoId AND km > :km")
+    suspend fun apagarAcimaDe(veiculoId: Long, km: Int)
+
     @Query("SELECT MAX(data) FROM leituras_km WHERE veiculoId = :veiculoId")
     suspend fun ultimaLeitura(veiculoId: Long): Long?
 }

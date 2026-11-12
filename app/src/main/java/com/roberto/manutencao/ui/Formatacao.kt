@@ -44,6 +44,11 @@ fun formatarDinheiro(valor: Long, casas: Int): String {
     return formato.format(valor / divisor)
 }
 
+/** Centavos por km → "R$ 0,021" (3 casas abaixo de R$ 1, para não virar "R$ 0,02") ou "R$ 1,35". */
+fun formatarCustoKm(centavosPorKm: Double): String =
+    if (centavosPorKm < 100) formatarDinheiro(Math.round(centavosPorKm * 10), 3)
+    else formatarDinheiro(Math.round(centavosPorKm))
+
 /** 11.83 → "11,8 km/l" */
 fun formatarConsumo(kmL: Double): String = String.format(PT_BR, "%.1f km/l", kmL)
 

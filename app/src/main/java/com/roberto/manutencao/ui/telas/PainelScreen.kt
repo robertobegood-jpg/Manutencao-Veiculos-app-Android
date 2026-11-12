@@ -52,6 +52,7 @@ import com.roberto.manutencao.ui.descreverLeitura
 import com.roberto.manutencao.ui.descricao
 import com.roberto.manutencao.ui.diasDesde
 import com.roberto.manutencao.ui.formatarConsumo
+import com.roberto.manutencao.ui.formatarCustoKm
 import com.roberto.manutencao.ui.formatarDinheiro
 import com.roberto.manutencao.ui.formatarNumero
 import com.roberto.manutencao.ui.plural
@@ -226,7 +227,7 @@ internal fun SecaoGastos(
             listOf(
                 (if (periodo == Periodo.MES) "Gasto no mês" else "Total gasto") to
                     (if (resumo.gastoTotal > 0) formatarDinheiro(resumo.gastoTotal) else "—"),
-                "Custo por km" to (resumo.custoPorKm?.let { "${formatarDinheiro(Math.round(it))}/km" } ?: "—"),
+                "Custo por km" to (resumo.custoPorKm?.let { "${formatarCustoKm(it)}/km" } ?: "—"),
                 "Km rodados" to (resumo.kmRodados?.formatarKm() ?: "—"),
                 "Consumo médio" to (resumo.consumoMedio?.let { formatarConsumo(it) } ?: "—")
             )

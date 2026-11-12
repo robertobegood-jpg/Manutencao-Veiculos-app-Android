@@ -87,8 +87,8 @@ fun VeiculoFormScreen(
             modelo = modelo,
             ano = anoNumero,
             placa = placa,
-            // Ao editar, o km só muda pelo botão "Atualizar km", para manter o histórico certo.
-            kmAtual = base?.kmAtual ?: (km.toIntOrNull() ?: 0)
+            // Ao editar, o campo serve para corrigir um km digitado errado.
+            kmAtual = km.toIntOrNull() ?: base?.kmAtual ?: 0
         )
         viewModel.salvar(veiculo, onVoltar)
     }
@@ -156,9 +156,9 @@ fun VeiculoFormScreen(
                 valor = km,
                 onValor = { novo -> km = novo.filter(Char::isDigit).take(7) },
                 rotulo = "Km atual",
-                habilitado = !editando,
                 erro = erroKm,
-                ajuda = if (editando) "Use \"Atualizar km\" no painel para mudar." else "O número que aparece no painel.",
+                ajuda = if (editando) "Só para corrigir um erro de digitação. No dia a dia, use \"Atualizar km\" no painel."
+                else "O número que aparece no painel.",
                 teclado = KeyboardOptions(keyboardType = KeyboardType.Number)
             )
             Spacer(Modifier.height(8.dp))

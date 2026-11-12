@@ -47,12 +47,12 @@ object Notificacoes {
     }
 
     /** As notificações estão liberadas para o app? */
-    fun podeNotificar(context: Context): Boolean {
+    fun podeNotificar(context: Context): Boolean = runCatching {
         val permissao = Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
             ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) ==
             PackageManager.PERMISSION_GRANTED
-        return permissao && NotificationManagerCompat.from(context).areNotificationsEnabled()
-    }
+        permissao && NotificationManagerCompat.from(context).areNotificationsEnabled()
+    }.getOrDefault(true)
 
     fun cancelar(context: Context, id: Int) {
         NotificationManagerCompat.from(context).cancel(id)
