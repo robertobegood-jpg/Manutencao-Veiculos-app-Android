@@ -62,7 +62,7 @@ import kotlin.math.log10
 import kotlin.math.pow
 
 private val PT_BR = Locale("pt", "BR")
-private val FORMATO_DIA = DateTimeFormatter.ofPattern("dd/MM", PT_BR)
+private val FORMATO_DIA = DateTimeFormatter.ofPattern("dd/MM/yy", PT_BR)
 
 /** Entrada das réguas do sistema: cúbico ease-out, 0,9 s. */
 private val EASING_REVELAR = CubicBezierEasing(0.215f, 0.61f, 0.355f, 1f)
@@ -110,7 +110,7 @@ fun GradeIndicadores(itens: List<Pair<String, String>>, modifier: Modifier = Mod
                             .weight(1f)
                             .padding(16.dp)
                     ) {
-                        Hud(rotulo)
+                        Hud(rotulo, maxLinhas = 2)
                         Spacer(Modifier.height(4.dp))
                         TextoQueCabe(
                             valor,
@@ -142,7 +142,7 @@ fun TextoQueCabe(texto: String, estilo: TextStyle, cor: Color, modifier: Modifie
             .semantics { contentDescription = texto }
             .drawWithCache {
                 val cheio = medidor.measure(texto, estilo.copy(color = cor), softWrap = false, maxLines = 1)
-                val escala = if (cheio.size.width > size.width) (size.width / cheio.size.width).coerceAtLeast(0.6f) else 1f
+                val escala = if (cheio.size.width > size.width) (size.width / cheio.size.width * 0.96f).coerceAtLeast(0.6f) else 1f
                 val final = if (escala < 1f) {
                     medidor.measure(
                         texto,
@@ -233,12 +233,15 @@ fun GraficoGastos(barras: List<BarraGasto>, modifier: Modifier = Modifier) {
         ) {
             val alturaRotulos = 38.dp.toPx()
             val alturaUtil = size.height - alturaRotulos
+            // Reserva o topo para o rótulo da linha mais alta não invadir o texto de cima.
+            val topo = 18.dp.toPx()
+            val area = alturaUtil - topo
             val fio = 1.dp.toPx()
             val folga = 8.dp.toPx()
 
             // Grade: 4 divisões, valor no canto esquerdo de cada linha.
             for (i in 0..4) {
-                val y = alturaUtil * (1f - i / 4f)
+                val y = topo + area * (1f - i / 4f)
                 drawLine(if (i == 0) c.lineStrong else c.line, Offset(0f, y), Offset(size.width, y), fio)
                 if (i > 0) {
                     val rotulo = medidor.measure(dinheiroCompacto(teto * i / 4), estiloEixo)
@@ -260,7 +263,7 @@ fun GraficoGastos(barras: List<BarraGasto>, modifier: Modifier = Modifier) {
                 var base = alturaUtil
                 listOf(b.manutencao, b.combustivel, b.despesas).forEachIndexed { serie, valor ->
                     if (valor > 0) {
-                        val h = alturaUtil * (valor.toFloat() / teto) * progresso.value
+                        val h = area * (valor.toFloat() / teto) * progresso.value
                         drawRect(
                             color = cores[serie].copy(alpha = alfa),
                             topLeft = Offset(x, base - h),
@@ -364,7 +367,6 @@ fun GraficoConsumo(pontos: List<PontoConsumo>, media: Double?, modifier: Modifie
     val faixaY = (maximo - minimo).coerceAtLeast(1.0)
     val estiloEixo = t.hud.copy(color = c.faint)
     val estiloMedia = t.hud.copy(color = c.muted)
-    val estiloValor = t.hud.copy(color = c.accentInk)
 
     Column(modifier.fillMaxWidth()) {
         Canvas(
@@ -374,10 +376,11 @@ fun GraficoConsumo(pontos: List<PontoConsumo>, media: Double?, modifier: Modifie
         ) {
             val alturaRotulo = 20.dp.toPx()
             val alturaUtil = size.height - alturaRotulo
+            val topo = 18.dp.toPx()
             val fio = 1.dp.toPx()
             val margem = 8.dp.toPx()
             val largura = size.width - margem * 2
-            fun y(v: Double) = (alturaUtil * (1 - (v - minimo) / faixaY)).toFloat()
+            fun y(v: Double) = (topo + (alturaUtil - topo) * (1 - (v - minimo) / faixaY)).toFloat()
             fun x(i: Int) = margem + largura * i / (pontos.size - 1)
 
             // Grade com 3 divisões.
@@ -415,16 +418,8 @@ fun GraficoConsumo(pontos: List<PontoConsumo>, media: Double?, modifier: Modifie
                 }
             }
 
-            // Valor do último ponto e datas das pontas.
+            // Datas das pontas (com ano, para históricos de mais de um ano).
             val ultimo = pontos.last()
-            val rValor = medidor.measure(String.format(PT_BR, "%.1f", ultimo.kmL), estiloValor)
-            drawText(
-                rValor,
-                topLeft = Offset(
-                    (x(pontos.lastIndex) - rValor.size.width).coerceAtLeast(0f),
-                    (y(ultimo.kmL) - rValor.size.height - 6.dp.toPx()).coerceAtLeast(0f)
-                )
-            )
             val rIni = medidor.measure(pontos.first().data.format(FORMATO_DIA), estiloEixo)
             val rFim = medidor.measure(ultimo.data.format(FORMATO_DIA), estiloEixo)
             drawText(rIni, topLeft = Offset(0f, alturaUtil + 6.dp.toPx()))

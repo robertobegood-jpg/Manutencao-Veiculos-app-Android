@@ -27,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.roberto.manutencao.data.ItemCompra
 import com.roberto.manutencao.data.Veiculo
@@ -41,7 +42,6 @@ import com.roberto.manutencao.ui.componentes.Hud
 import com.roberto.manutencao.ui.componentes.Linha
 import com.roberto.manutencao.ui.componentes.Segmentado
 import com.roberto.manutencao.ui.componentes.TituloDisplay
-import com.roberto.manutencao.ui.descreverPeca
 import com.roberto.manutencao.ui.descreverQuantidade
 import com.roberto.manutencao.ui.formatarDinheiro
 import com.roberto.manutencao.ui.plural
@@ -63,7 +63,9 @@ fun ComprasScreen(
     onAlternar: (ItemCompra) -> Unit,
     onAdicionarTrocasPendentes: () -> Unit,
     onRegistrarCompras: () -> Unit,
-    onLimparComprados: () -> Unit
+    onLimparComprados: () -> Unit,
+    /** Abrir já em "Comprados" (usado nos prints da revisão). */
+    compradosInicial: Boolean = false
 ) {
     val c = Oficina.cores
     val t = Oficina.tipos
@@ -79,7 +81,7 @@ fun ComprasScreen(
         return
     }
 
-    var aba by rememberSaveable { mutableStateOf(AbaCompras.PENDENTES) }
+    var aba by rememberSaveable { mutableStateOf(if (compradosInicial) AbaCompras.COMPRADOS else AbaCompras.PENDENTES) }
     var confirmarLimpeza by remember { mutableStateOf(false) }
 
     val pendentes = compras.orEmpty().filter { !it.comprado }
@@ -135,7 +137,7 @@ fun ComprasScreen(
                         Column(Modifier.padding(horizontal = 4.dp)) {
                             if (trocasPendentes > 0) {
                                 BotaoTexto(
-                                    "+  Trocas vencidas e próximas · $trocasPendentes",
+                                    "+  Trocas pendentes · $trocasPendentes",
                                     onClick = onAdicionarTrocasPendentes
                                 )
                             }
@@ -276,14 +278,22 @@ private fun LinhaCompra(
                 color = if (compra.comprado) c.muted else c.ink,
                 textDecoration = if (compra.comprado) TextDecoration.LineThrough else null
             )
-            val peca = descreverPeca(compra.modelo, compra.referencia)
-            if (peca.isNotBlank()) Hud(peca, cor = if (compra.comprado) c.faint else c.muted, maxLinhas = 2)
-            val detalhe = listOfNotNull(
+            // Referência em linha própria e inteira: é o que identifica a peça na loja.
+            if (compra.referencia.isNotBlank()) {
+                Hud("Ref. ${compra.referencia}", cor = if (compra.comprado) c.faint else c.accentInk, maxLinhas = 2)
+            }
+            if (compra.modelo.isNotBlank()) {
+                Text(compra.modelo, style = t.bodySm, color = c.muted, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            }
+            Text(
                 descreverQuantidade(compra) +
                     if (compra.precoUnitarioCentavos > 0) " × ${formatarDinheiro(compra.precoUnitarioCentavos)}" else "",
-                compra.loja.takeIf { it.isNotBlank() }
-            ).joinToString(" · ")
-            Text(detalhe, style = t.bodySm, color = c.muted)
+                style = t.bodySm,
+                color = c.muted
+            )
+            if (compra.loja.isNotBlank()) {
+                Text(compra.loja, style = t.bodySm, color = c.muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
             if (mostrarRegistro) {
                 Hud(
                     if (compra.registroId != null) "Registrado" else "Sem registro",

@@ -197,8 +197,9 @@ private fun LinhaAbastecimento(item: AbastecimentoComConsumo, onClick: () -> Uni
                 listOfNotNull(
                     Datas.formatar(a.data),
                     a.km.formatarKm(),
-                    if (a.tanqueCheio) "Cheio" else "Parcial"
-                ).joinToString(" · ")
+                    if (a.tanqueCheio) null else "Parcial"
+                ).joinToString(" · "),
+                maxLinhas = 2
             )
             Spacer(Modifier.height(4.dp))
             Text(

@@ -167,6 +167,11 @@ class TelasTest {
     }
 
     @Test fun servicos() = fatias("servicos", 1500.dp) { Servicos() }
+    @Test fun servicos_historico() = fatias("servicos_historico", 1500.dp) {
+        Celular(Rotas.MANUTENCOES) {
+            ManutencaoScreen(carro, DadosDeTeste.situacoesCarro(), DadosDeTeste.registros(1), {}, {}, {}, {}, {}, {}, historicoInicial = true)
+        }
+    }
     @Test fun servicos_fonte_grande() { fonteGrande(); fatias("servicos_fonte_grande", 1500.dp) { Servicos() } }
 
     @Composable
@@ -174,7 +179,10 @@ class TelasTest {
         ComprasScreen(carro, DadosDeTeste.compras(), 3, {}, {}, {}, {}, {}, {})
     }
 
-    @Test fun compras() = fatias("compras", 1000.dp) { Compras() }
+    @Test fun compras() = fatias("compras", 1500.dp) { Compras() }
+    @Test fun compras_comprados() = fatias("compras_comprados", 1000.dp) {
+        Celular(Rotas.COMPRAS) { ComprasScreen(carro, DadosDeTeste.compras(), 3, {}, {}, {}, {}, {}, {}, compradosInicial = true) }
+    }
     @Test fun compras_fonte_grande() { fonteGrande(); fatias("compras_fonte_grande", 1500.dp) { Compras() } }
 
     @Test fun posto() = fatias("posto", 1500.dp) {

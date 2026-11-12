@@ -26,6 +26,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.roberto.manutencao.data.Veiculo
 import com.roberto.manutencao.ui.componentes.BotaoPrimario
 import com.roberto.manutencao.ui.componentes.BotaoSecundario
@@ -135,9 +136,10 @@ private fun LinhaVeiculo(
             Hud(
                 listOf(veiculo.tipo.rotulo, veiculo.placa, veiculo.kmAtual.formatarKm())
                     .filter { it.isNotBlank() }
-                    .joinToString(" · ")
+                    .joinToString(" · "),
+                maxLinhas = 2
             )
-            Text(veiculo.apelido, style = t.heading.copy(fontSize = t.body.fontSize), color = c.inkStrong)
+            Text(veiculo.apelido, style = t.heading.copy(fontSize = 18.sp, lineHeight = 24.sp), color = c.inkStrong)
             val descricao = veiculo.descricao()
             if (descricao.isNotBlank()) Text(descricao, style = t.bodySm, color = c.muted)
             if (selecionado) Hud("Selecionado", cor = c.accentInk)

@@ -55,7 +55,9 @@ fun ManutencaoScreen(
     onNovoItem: () -> Unit,
     onAdicionarSugeridos: () -> Unit,
     onRegistrar: () -> Unit,
-    onAbrirRegistro: (Long) -> Unit
+    onAbrirRegistro: (Long) -> Unit,
+    /** Abrir já no histórico (usado nos prints da revisão). */
+    historicoInicial: Boolean = false
 ) {
     val c = Oficina.cores
     val t = Oficina.tipos
@@ -70,7 +72,7 @@ fun ManutencaoScreen(
         return
     }
 
-    var aba by rememberSaveable { mutableStateOf(AbaServicos.ITENS) }
+    var aba by rememberSaveable { mutableStateOf(if (historicoInicial) AbaServicos.HISTORICO else AbaServicos.ITENS) }
 
     Column(Modifier.fillMaxSize()) {
         LazyColumn(Modifier.weight(1f)) {
