@@ -1,5 +1,9 @@
 package com.roberto.manutencao
 
+import androidx.activity.compose.LocalActivityResultRegistryOwner
+import androidx.activity.result.ActivityResultRegistry
+import androidx.activity.result.ActivityResultRegistryOwner
+import androidx.activity.result.contract.ActivityResultContract
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,12 +14,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.core.app.ActivityOptionsCompat
 import app.cash.paparazzi.DeviceConfig
 import app.cash.paparazzi.Paparazzi
 import com.android.resources.Density
@@ -70,8 +76,18 @@ class TelasTest {
     @Composable
     private fun ComTema(escuro: Boolean, conteudo: @Composable () -> Unit) {
         val fontes = FontesOficina(LocalContext.current)
-        ManutencaoTheme(escuro = escuro, fontes = fontes) {
-            Box(Modifier.fillMaxSize().background(Oficina.cores.bg)) { conteudo() }
+        // Telas com seletores de arquivo/permissão precisam de um "dono" de resultados, como uma Activity.
+        val dono = object : ActivityResultRegistryOwner {
+            override val activityResultRegistry = object : ActivityResultRegistry() {
+                override fun <I, O> onLaunch(
+                    requestCode: Int, contract: ActivityResultContract<I, O>, input: I, options: ActivityOptionsCompat?
+                ) = Unit
+            }
+        }
+        CompositionLocalProvider(LocalActivityResultRegistryOwner provides dono) {
+            ManutencaoTheme(escuro = escuro, fontes = fontes) {
+                Box(Modifier.fillMaxSize().background(Oficina.cores.bg)) { conteudo() }
+            }
         }
     }
 

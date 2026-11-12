@@ -8,7 +8,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -29,6 +28,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
@@ -38,10 +38,14 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.roberto.manutencao.data.FatiaGasto
@@ -124,23 +128,36 @@ fun GradeIndicadores(itens: List<Pair<String, String>>, modifier: Modifier = Mod
 /**
  * Texto de uma linha que diminui a fonte até caber na largura disponível
  * (até 60% do tamanho original), em vez de ser cortado com reticências.
+ * Calcula e desenha na fase de desenho, com altura fixa de uma linha, para
+ * funcionar dentro de linhas com altura intrínseca (como a grade de indicadores).
  */
 @Composable
 fun TextoQueCabe(texto: String, estilo: TextStyle, cor: Color, modifier: Modifier = Modifier) {
     val medidor = rememberTextMeasurer()
-    BoxWithConstraints(modifier) {
-        val disponivel = constraints.maxWidth
-        val largura = remember(texto, estilo) { medidor.measure(texto, estilo, softWrap = false, maxLines = 1).size.width }
-        val escala = if (disponivel in 1 until largura) (disponivel.toFloat() / largura).coerceAtLeast(0.6f) else 1f
-        Text(
-            texto,
-            style = estilo.copy(fontSize = estilo.fontSize * escala, lineHeight = estilo.lineHeight * escala),
-            color = cor,
-            maxLines = 1,
-            softWrap = false,
-            overflow = TextOverflow.Ellipsis
-        )
-    }
+    val altura = with(LocalDensity.current) { estilo.lineHeight.toDp() }
+    Spacer(
+        modifier
+            .fillMaxWidth()
+            .height(altura)
+            .semantics { contentDescription = texto }
+            .drawWithCache {
+                val cheio = medidor.measure(texto, estilo.copy(color = cor), softWrap = false, maxLines = 1)
+                val escala = if (cheio.size.width > size.width) (size.width / cheio.size.width).coerceAtLeast(0.6f) else 1f
+                val final = if (escala < 1f) {
+                    medidor.measure(
+                        texto,
+                        estilo.copy(color = cor, fontSize = estilo.fontSize * escala),
+                        softWrap = false,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        constraints = Constraints(maxWidth = size.width.toInt().coerceAtLeast(0))
+                    )
+                } else cheio
+                onDrawBehind {
+                    drawText(final, topLeft = Offset(0f, (size.height - final.size.height) / 2))
+                }
+            }
+    )
 }
 
 /** Legenda com pontos de cor. */
