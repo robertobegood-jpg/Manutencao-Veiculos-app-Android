@@ -120,14 +120,14 @@ class TelasTest {
     @Test fun gastos_tudo_10meses() = gastos(Periodo.TUDO, 1)
     @Test fun gastos_tudo_fonte_grande() { fonteGrande(); gastos(Periodo.TUDO, 2) }
 
-    private fun servicos() = paparazzi.snapshot {
+    private fun telaServicos() = paparazzi.snapshot {
         Celular(Rotas.MANUTENCOES) {
             ManutencaoScreen(carro, DadosDeTeste.situacoesCarro(), DadosDeTeste.registros(1), {}, {}, {}, {}, {}, {})
         }
     }
 
-    @Test fun servicos() = servicos()
-    @Test fun servicos_fonte_grande() { fonteGrande(); servicos() }
+    @Test fun servicos() = telaServicos()
+    @Test fun servicos_fonte_grande() { fonteGrande(); telaServicos() }
 
     @Test fun compras() = paparazzi.snapshot {
         Celular(Rotas.COMPRAS) {
