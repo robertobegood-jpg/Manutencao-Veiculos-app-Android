@@ -155,11 +155,11 @@ class TelasTest {
     }
 
     @Test fun despesas() = paparazzi.snapshot {
-        ComComTema { DespesasScreen(carro, DadosDeTeste.despesas(), {}, {}, {}) }
+        ComTema { DespesasScreen(carro, DadosDeTeste.despesas(), {}, {}, {}) }
     }
 
     @Test fun veiculos() = paparazzi.snapshot {
-        ComComTema { VeiculosScreen(DadosDeTeste.veiculos, carro.id, {}, {}, {}, {}, {}) }
+        ComTema { VeiculosScreen(DadosDeTeste.veiculos, carro.id, {}, {}, {}, {}, {}) }
     }
 
     /** Confere se as fontes do Oficina carregaram no ambiente dos prints. */
